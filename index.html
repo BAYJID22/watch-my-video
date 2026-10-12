@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>P2P Video Share - Uploader</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #121212; color: white; }
+        #upload-container { border: 2px dashed #444; padding: 40px; border-radius: 10px; cursor: pointer; }
+        #link-section { margin-top: 20px; display: none; }
+        input[type="text"] { width: 80%; padding: 10px; margin-top: 10px; background: #222; border: 1px solid #444; color: #0f0; }
+        .warning { color: #ffab00; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>Direct Video Sharer</h1>
+    <div id="upload-container">
+        <p>Click to select a video or drag one here</p>
+        <input type="file" id="fileInput" accept="video/*" style="display:none">
+    </div>
+
+    <div id="link-section">
+        <p>Video is now live! Copy this link:</p>
+        <input type="text" id="shareLink" readonly>
+        <p class="warning">⚠️ IMPORTANT: Do not close this tab. If you close it, the video will disappear for the viewer.</p>
+        <div id="status">Status: Seeding...</div>
+    </div>
+
+    <!-- Load WebTorrent -->
+    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+    <script>
+        const client = new WebTorrent();
+        const uploadContainer = document.getElementById('upload-container');
+        const fileInput = document.getElementById('fileInput');
+        const shareLink = document.getElementById('shareLink');
+        const linkSection = document.getElementById('link-section');
+
+        uploadContainer.onclick = () => fileInput.click();
+
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Start seeding the file
+            client.seed(file, (torrent) => {
+                // Generate the link using the current URL + the torrent infoHash
+                const url = window.location.href.replace('index.html', '') + 'view.html#' + torrent.infoHash;
+                shareLink.value = url;
+                linkSection.style.display = 'block';
+                uploadContainer.style.display = 'none';
+                
+                console.log('Seeding:', torrent.infoHash);
+            });
+        };
+    </script>
+</body>
+</html>
